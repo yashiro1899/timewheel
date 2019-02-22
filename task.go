@@ -22,16 +22,6 @@ type Task struct {
 	expiredAt time.Time
 }
 
-func (t *Task) Call() {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Printf("task(%d) with args(%v): %v\n", t.Id, t.args, err)
-		}
-	}()
-
-	t.callback(t.args...)
-}
-
 func NewTask(
 	args []interface{},
 	callback func(...interface{}),
@@ -52,4 +42,14 @@ func NewTaskAfter(
 ) *Task {
 	now := time.Now()
 	return NewTask(args, callback, now.Add(delay))
+}
+
+func (t *Task) Call() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("task(%d) with args(%v): %v\n", t.Id, t.args, err)
+		}
+	}()
+
+	t.callback(t.args...)
 }

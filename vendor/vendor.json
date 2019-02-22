@@ -1,6 +1,13 @@
 {
 	"comment": "",
 	"ignore": "test",
-	"package": [],
+	"package": [
+		{
+			"checksumSHA1": "ooEfaKEeZt34ebW5YibKTvFip8Y=",
+			"path": "github.com/sony/sonyflake",
+			"revision": "6d5bd61810093eae37d7d605d0cbdd845969b5b2",
+			"revisionTime": "2018-11-09T02:24:03Z"
+		}
+	],
 	"rootPath": "itcast/timewheel"
 }

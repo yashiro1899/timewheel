@@ -51,3 +51,5 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+vendor/**/LICENSE
+vendor/**/README.md
