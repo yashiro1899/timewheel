@@ -17,7 +17,7 @@ type TimeWheel struct {
 
 	addTaskC    chan *Task
 	removeTaskC chan uint64
-	stopC       chan bool
+	stopC       chan struct{}
 }
 
 func NewTimeWheel(interval time.Duration, scale, divisor int) *TimeWheel {
@@ -28,13 +28,17 @@ func NewTimeWheel(interval time.Duration, scale, divisor int) *TimeWheel {
 		slots:       make([]map[uint64]*Task, scale),
 		addTaskC:    make(chan *Task),
 		removeTaskC: make(chan uint64),
-		stopC:       make(chan bool),
+		stopC:       make(chan struct{}),
 	}
 }
 
 func (tw *TimeWheel) Start() {
 	tw.ticker = time.NewTicker(tw.interval / time.Duration(tw.divisor))
 	go tw.start()
+}
+
+func (tw *TimeWheel) Stop() {
+	tw.stopC <- struct{}{}
 }
 
 func (tw *TimeWheel) initSlots() {
@@ -50,17 +54,19 @@ func (tw *TimeWheel) start() {
 		select {
 		case <-tw.ticker.C:
 			tw.tickHandler()
-			// case tw.addTaskC:
-			// case tw.removeTaskC:
-			// case tw.stopC:
+		// case tw.addTaskC:
+		// case tw.removeTaskC:
+		case <-tw.stopC:
+			tw.ticker.Stop()
+			return
 		}
 	}
 }
 
 func (tw *TimeWheel) tickHandler() {
-	tw.counter++
-
 	log.Println(tw.counter, tw.current)
+
+	tw.counter++
 	if tw.counter == tw.divisor {
 		tw.counter = 0
 		tw.current++
