@@ -15,10 +15,10 @@ func TestTimeWheel_Start(t *testing.T) {
 	tw.Start()
 	log.Println(time.Now())
 
-	task1 := NewTaskAfter([]interface{}{"1s"}, f, 130*time.Millisecond)
-	task5 := NewTaskAfter([]interface{}{"5s"}, f, 500*time.Millisecond)
-	task13 := NewTaskAfter([]interface{}{"13s"}, f, 1300*time.Millisecond)
-	task25 := NewTaskAfter([]interface{}{"25s"}, f, 2500*time.Millisecond)
+	task1 := NewTaskAfter([]interface{}{"130ms"}, f, 130*time.Millisecond)
+	task5 := NewTaskAfter([]interface{}{"500ms"}, f, 500*time.Millisecond)
+	task13 := NewTaskAfter([]interface{}{"1300ms"}, f, 1300*time.Millisecond)
+	task25 := NewTaskAfter([]interface{}{"2500ms"}, f, 2500*time.Millisecond)
 
 	tw.AddTask(task1)
 	tw.AddTask(task5)
@@ -28,5 +28,5 @@ func TestTimeWheel_Start(t *testing.T) {
 
 	time.Sleep(3 * time.Second)
 	tw.Stop()
-	time.Sleep(time.Second)
+	time.Sleep(100 * time.Millisecond)
 }
