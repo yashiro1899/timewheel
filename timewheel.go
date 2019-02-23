@@ -52,8 +52,8 @@ func (tw *TimeWheel) start() {
 
 	for {
 		select {
-		case <-tw.ticker.C:
-			tw.tickHandler()
+		case now := <-tw.ticker.C:
+			tw.tickHandler(now)
 		// case tw.addTaskC:
 		// case tw.removeTaskC:
 		case <-tw.stopC:
@@ -63,13 +63,23 @@ func (tw *TimeWheel) start() {
 	}
 }
 
-func (tw *TimeWheel) tickHandler() {
+func (tw *TimeWheel) tickHandler(now time.Time) {
 	log.Println(tw.counter, tw.current)
+	tw.runTasks(now)
 
 	tw.counter++
 	if tw.counter == tw.divisor {
 		tw.counter = 0
 		tw.current++
 		tw.current = tw.current % tw.scale
+	}
+}
+
+func (tw *TimeWheel) runTasks(now time.Time) {
+	for _, t := range tw.slots[tw.current] {
+		if now.After(t.expiredAt) {
+			go t.Call()
+			delete(tw.slots[tw.current], t.Id)
+		}
 	}
 }
