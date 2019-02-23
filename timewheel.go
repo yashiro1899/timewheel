@@ -66,8 +66,9 @@ func (tw *TimeWheel) start() {
 }
 
 func (tw *TimeWheel) tickHandler(now time.Time) {
-	// log.Println(tw.counter, tw.current)
-	tw.runTasks(now)
+	if tw.next == nil {
+		tw.runTasks(now)
+	}
 
 	tw.counter++
 	if tw.counter == tw.divisor {
