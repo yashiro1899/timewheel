@@ -42,12 +42,16 @@ func (tw *TimeWheel) Stop() {
 	tw.stopC <- struct{}{}
 }
 
+func (tw *TimeWheel) AddNext(next *TimeWheel) {
+	tw.next = next
+}
+
 func (tw *TimeWheel) AddTask(t *Task) {
 	tw.addTaskC <- t
 }
 
-func (tw *TimeWheel) AddNext(next *TimeWheel) {
-	tw.next = next
+func (tw *TimeWheel) RemoveTask(id uint64) {
+	tw.removeTaskC <- id
 }
 
 func (tw *TimeWheel) initSlots() {
@@ -65,7 +69,8 @@ func (tw *TimeWheel) start() {
 			tw.tickHandler(now)
 		case t := <-tw.addTaskC:
 			tw.addTask(t)
-		// case tw.removeTaskC:
+		case id := <-tw.removeTaskC:
+			tw.removeTask(id)
 		case <-tw.stopC:
 			tw.ticker.Stop()
 			return
@@ -108,5 +113,18 @@ func (tw *TimeWheel) addTask(t *Task) {
 	} else {
 		pos := (tw.current + int(gap/tw.interval)) % tw.scale
 		tw.slots[pos][t.Id] = t
+	}
+}
+
+func (tw *TimeWheel) removeTask(id uint64) {
+	for _, slot := range tw.slots {
+		if _, ok := slot[id]; ok {
+			delete(slot, id)
+			return
+		}
+	}
+
+	if tw.next != nil {
+		tw.next.RemoveTask(id)
 	}
 }
