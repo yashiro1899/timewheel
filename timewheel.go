@@ -20,7 +20,7 @@ type TimeWheel struct {
 }
 
 func NewTimeWheel(interval time.Duration, scale, divisor int) *TimeWheel {
-	tw := &TimeWheel{
+	return &TimeWheel{
 		interval:    interval,
 		divisor:     divisor,
 		scale:       scale,
@@ -29,9 +29,6 @@ func NewTimeWheel(interval time.Duration, scale, divisor int) *TimeWheel {
 		removeTaskC: make(chan uint64),
 		stopC:       make(chan struct{}),
 	}
-
-	tw.initSlots()
-	return tw
 }
 
 func (tw *TimeWheel) Start() {
@@ -45,6 +42,14 @@ func (tw *TimeWheel) Stop() {
 	tw.stopC <- struct{}{}
 }
 
+func (tw *TimeWheel) AddTask(t *Task) {
+	tw.addTaskC <- t
+}
+
+func (tw *TimeWheel) AddNext(next *TimeWheel) {
+	tw.next = next
+}
+
 func (tw *TimeWheel) initSlots() {
 	for i, _ := range tw.slots {
 		tw.slots[i] = make(map[uint64]*Task)
@@ -52,11 +57,14 @@ func (tw *TimeWheel) initSlots() {
 }
 
 func (tw *TimeWheel) start() {
+	tw.initSlots()
+
 	for {
 		select {
 		case now := <-tw.ticker.C:
 			tw.tickHandler(now)
-		// case tw.addTaskC:
+		case t := <-tw.addTaskC:
+			tw.addTask(t)
 		// case tw.removeTaskC:
 		case <-tw.stopC:
 			tw.ticker.Stop()
@@ -84,5 +92,21 @@ func (tw *TimeWheel) runTasks(now time.Time) {
 			go t.Call() // TODO: 控制数量
 			delete(tw.slots[tw.current], t.Id)
 		}
+	}
+}
+
+func (tw *TimeWheel) addTask(t *Task) {
+	now := time.Now()
+	gap := t.expiredAt.Sub(now)
+
+	if gap < tw.interval {
+		if tw.next == nil {
+			tw.slots[tw.current][t.Id] = t
+		} else {
+			tw.next.AddTask(t)
+		}
+	} else {
+		pos := (tw.current + int(gap/tw.interval)) % tw.scale
+		tw.slots[pos][t.Id] = t
 	}
 }
