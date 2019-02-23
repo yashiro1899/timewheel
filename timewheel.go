@@ -86,8 +86,7 @@ func (tw *TimeWheel) tickHandler(now time.Time) {
 	tw.counter++
 	if tw.counter == tw.divisor {
 		tw.counter = 0
-		tw.current++
-		tw.current = tw.current % tw.scale
+		tw.reAddTasks()
 	}
 }
 
@@ -97,6 +96,23 @@ func (tw *TimeWheel) runTasks(now time.Time) {
 			go t.Call() // TODO: 控制数量
 			delete(tw.slots[tw.current], t.Id)
 		}
+	}
+}
+
+func (tw *TimeWheel) reAddTasks() {
+	tasks := tw.slots[tw.current]
+	tw.slots[tw.current] = make(map[uint64]*Task)
+
+	tw.current++
+	tw.current = tw.current % tw.scale
+	for _, t := range tasks {
+		tw.addTask(t)
+	}
+
+	tasks = tw.slots[tw.current]
+	tw.slots[tw.current] = make(map[uint64]*Task)
+	for _, t := range tasks {
+		tw.addTask(t)
 	}
 }
 

@@ -26,6 +26,9 @@ func TestTimeWheel_Start(t *testing.T) {
 	tw.AddTask(task25)
 	tw.RemoveTask(task5.Id)
 
+	time.Sleep(900 * time.Millisecond)
+	tw.AddTask(NewTaskAfter([]interface{}{"500ms"}, f, 500*time.Millisecond))
+
 	time.Sleep(3 * time.Second)
 	tw.Stop()
 	time.Sleep(100 * time.Millisecond)
