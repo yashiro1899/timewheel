@@ -9,7 +9,7 @@ type TimeWheel struct {
 	ticker   *time.Ticker
 	interval time.Duration
 	scale    int
-	divisor  int
+	divisor  int // interval/divisor 控制精度
 	counter  int
 	current  int
 	slots    []map[uint64]*Task
@@ -78,7 +78,7 @@ func (tw *TimeWheel) tickHandler(now time.Time) {
 func (tw *TimeWheel) runTasks(now time.Time) {
 	for _, t := range tw.slots[tw.current] {
 		if now.After(t.expiredAt) {
-			go t.Call()
+			go t.Call() // TODO: 控制数量
 			delete(tw.slots[tw.current], t.Id)
 		}
 	}
