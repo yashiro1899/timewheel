@@ -1,7 +1,6 @@
 package timewheel
 
 import (
-	"log"
 	"time"
 )
 
@@ -21,7 +20,7 @@ type TimeWheel struct {
 }
 
 func NewTimeWheel(interval time.Duration, scale, divisor int) *TimeWheel {
-	return &TimeWheel{
+	tw := &TimeWheel{
 		interval:    interval,
 		divisor:     divisor,
 		scale:       scale,
@@ -30,11 +29,16 @@ func NewTimeWheel(interval time.Duration, scale, divisor int) *TimeWheel {
 		removeTaskC: make(chan uint64),
 		stopC:       make(chan struct{}),
 	}
+
+	tw.initSlots()
+	return tw
 }
 
 func (tw *TimeWheel) Start() {
-	tw.ticker = time.NewTicker(tw.interval / time.Duration(tw.divisor))
-	go tw.start()
+	if tw.ticker == nil {
+		tw.ticker = time.NewTicker(tw.interval / time.Duration(tw.divisor))
+		go tw.start()
+	}
 }
 
 func (tw *TimeWheel) Stop() {
@@ -48,8 +52,6 @@ func (tw *TimeWheel) initSlots() {
 }
 
 func (tw *TimeWheel) start() {
-	tw.initSlots()
-
 	for {
 		select {
 		case now := <-tw.ticker.C:
@@ -64,7 +66,7 @@ func (tw *TimeWheel) start() {
 }
 
 func (tw *TimeWheel) tickHandler(now time.Time) {
-	log.Println(tw.counter, tw.current)
+	// log.Println(tw.counter, tw.current)
 	tw.runTasks(now)
 
 	tw.counter++
