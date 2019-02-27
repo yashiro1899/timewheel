@@ -47,7 +47,7 @@ func NewTaskAfter(
 func (t *Task) Call() {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Printf("task(%d) with args(%v): %v\n", t.Id, t.args, err)
+			log.Printf("task(%x) with args(%v): %v\n", t.Id, t.args, err)
 		}
 	}()
 
